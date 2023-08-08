@@ -1,0 +1,114 @@
+import tkinter as tk
+from PIL import Image, ImageTk
+
+# Define a function to insert a character into the appropriate entry box
+def insert_char(char):
+    focused_widget = root.focus_get()
+    if isinstance(focused_widget, tk.Entry):
+        focused_widget.insert(tk.END, char)
+
+        
+        
+def isMatch(str, pattern):
+    n, m = len(str), len(pattern)
+    dp = [[False] * (m+1) for _ in range(n+1)]
+
+    dp[0][0] = True
+    for j in range(1, m+1):
+        if pattern[j-1] == '*':
+            dp[0][j] = dp[0][j-1]
+
+    for i in range(1, n+1):
+        for j in range(1, m+1):
+            if pattern[j-1] == '*' :
+                dp[i][j] = dp[i-1][j] or dp[i][j-1]
+            elif pattern[j-1] == str[i-1]:
+                dp[i][j] = dp[i-1][j-1]
+
+    return dp[n][m]
+
+def check_match():
+    pattern = pattern_entry.get()
+    str = str_entry.get()
+
+    if isMatch(str, pattern):
+        result_label.config(text="Match found")
+    else:
+        result_label.config(text="Match Not found")
+
+# Create the main window
+root = tk.Tk()
+root.title("Pattern Matching")
+root.geometry("2500x900")
+
+# Load the background image
+image = Image.open("ani4.png")
+resized_image = image.resize((root.winfo_screenwidth(), root.winfo_screenheight()))
+background_image = ImageTk.PhotoImage(resized_image)
+
+# Set up the background image
+background_label = tk.Label(root, image=background_image)
+background_label.place(x=0, y=0, relwidth=1.0, relheight=1.0)
+
+# Create label and entry widgets for pattern and string
+pattern_label = tk.Label(root, text="Pattern:", bg="white", font=('Arial', 36))
+pattern_label.grid(row=2, column=0, padx=5, pady=5, sticky=tk.E)
+
+pattern_entry = tk.Entry(root, bg="white", font=('Arial', 32))
+pattern_entry.grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
+
+str_label = tk.Label(root, text="String:", bg="white", font=('Arial', 36))
+str_label.grid(row=3, column=0, padx=5, pady=5, sticky=tk.E)
+
+str_entry = tk.Entry(root, bg="white", font=('Arial', 32))
+str_entry.grid(row=3, column=1, padx=5, pady=5, sticky=tk.W)
+
+# Create a frame to hold the virtual keyboard buttons
+keyboard_frame = tk.Frame(root, bg="#ffded7", bd=5, relief="groove")
+keyboard_frame.grid(row=4, column=0, columnspan=2)
+
+# Define a function to handle backspace button clicks
+def backspace():
+    focused_widget = root.focus_get()
+    if isinstance(focused_widget, tk.Entry):
+        current_text = focused_widget.get()
+        if len(current_text) > 0:
+            new_text = current_text[:-1]  # Remove the last character
+            focused_widget.delete(0, tk.END)
+            focused_widget.insert(0, new_text)
+
+# Create the virtual keyboard buttons and add them to the frame
+keyboard_chars = [
+    ('q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'),
+    ('a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', '?'),
+    ('.', 'z', 'x', 'c', 'v', 'b', 'n', 'm', '*', ','),('Backspace',),]
+
+for i, row in enumerate(keyboard_chars):
+    for j, char in enumerate(row):
+        if char == 'Backspace':
+            button = tk.Button(keyboard_frame, text=char, width=8, height=2,
+                               font=('Arial', 20), bg="#ffded7", fg="green", command=backspace)
+        else:
+            button = tk.Button(keyboard_frame, text=char.upper(), width=5, height=2,
+                               font=('Arial', 20), bg="#ffded7", fg="green", command=lambda c=char: insert_char(c))
+        button.grid(row=i, column=j)
+
+
+# Center the pattern and input boxes
+root.grid_columnconfigure(0, weight=1)
+root.grid_columnconfigure(1, weight=1)
+root.grid_rowconfigure(4, weight=1)
+
+# Create a button to check for a match
+check_button = tk.Button(root, text="Match", bg="#ffded7", fg="green", font=('Arial', 36), command=lambda: check_match())
+check_button.grid(row=5, column=1, padx=10, pady=10, sticky=tk.W)
+
+# Display the result label
+result_label = tk.Label(root, text="", bg="#ffded7", fg="green", font=('Arial', 36))
+result_label.grid(row=6, column=1, pady=5, sticky=tk.N)
+root.grid_rowconfigure(6, weight=1)
+
+# Set the focus to the pattern entry box when the program starts
+pattern_entry.focus
+
+root.mainloop()
